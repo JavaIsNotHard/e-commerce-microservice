@@ -1,0 +1,36 @@
+server:
+  port: 8080
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: book-service
+          uri: http://backend-resources:8081
+          predicates:
+            - Path=/books/**
+          filters:
+            - TokenRelay
+  security:
+    oauth2:
+      client:
+        provider:
+          platform-auth-server:
+            issuer-uri: http://backend-auth:9000
+        registration:
+          gateway-client:
+            provider: platform-auth-server
+            client-id: gateway-client
+            client-secret: "secret"
+            client-authentication-method: client_secret_basic
+            authorization-grant-type: authorization_code
+            redirect-uri: http://backend-gateway-client:8080/login/oauth2/code/gateway-client
+            scope:
+              - openid
+              - profile
+              - email
+  application:
+    name: backend-gateway-client
+
+logging:
+  level:
+    org.springframework.security: DEBUG
