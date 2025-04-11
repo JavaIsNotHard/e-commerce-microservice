@@ -12,9 +12,7 @@ import org.springframework.context.annotation.Bean;
 @SpringBootApplication
 public class GatewayClientApplication {
 
-	private final static Logger logger = LoggerFactory.getLogger(GatewayClientApplication.class);
 	public static void main(String[] args) {
-		logger.info("connected to gateway client application");
 		SpringApplication.run(GatewayClientApplication.class, args);
 	}
 
