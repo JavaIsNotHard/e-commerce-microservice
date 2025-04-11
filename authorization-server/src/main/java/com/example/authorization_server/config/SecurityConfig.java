@@ -56,7 +56,7 @@ public class SecurityConfig {
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
                 .redirectUri("http://backend-gateway-client:8080/login/oauth2/code/gateway-client")
-                .postLogoutRedirectUri("http://backend-gateway-client:8080/logout")
+                .postLogoutRedirectUri("http://backend-gateway-client:8080/api/logout")
                 .scope(OidcScopes.OPENID)
                 .scope(OidcScopes.PROFILE)
                 .scope(OidcScopes.EMAIL)
