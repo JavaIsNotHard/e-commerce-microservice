@@ -13,9 +13,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,12 +26,12 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
-import org.springframework.web.accept.MediaTypeFileExtensionResolver;
 
+import javax.sql.DataSource;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -72,11 +70,17 @@ public class SecurityConfig {
         OAuth2AuthorizationServerConfigurer oAuth2AuthorizationServerConfigurer =
                 OAuth2AuthorizationServerConfigurer.authorizationServer();
 
+        http.csrf(AbstractHttpConfigurer::disable);
+
         http.securityMatcher(oAuth2AuthorizationServerConfigurer.getEndpointsMatcher())
                 .with(oAuth2AuthorizationServerConfigurer, authorizationServer ->
-                        authorizationServer.oidc(Customizer.withDefaults())
+                        authorizationServer
+                                .oidc(Customizer.withDefaults())
                 )
-                .authorizeHttpRequests((auth) -> auth.anyRequest().authenticated());
+                .authorizeHttpRequests((auth) -> auth
+                        .requestMatchers("/register").permitAll()
+                        .requestMatchers("/login").permitAll()
+                        .anyRequest().authenticated());
 
         http.
                 exceptionHandling((exception) ->
@@ -93,30 +97,28 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain defaultFilterChain(HttpSecurity http) throws Exception {
         LOGGER.info("Configuring SecurityFilterChain");
+        http.csrf(AbstractHttpConfigurer::disable);
+
         http
                 .formLogin(Customizer.withDefaults())
-                .authorizeHttpRequests((auth) -> auth.anyRequest().authenticated());
+                .authorizeHttpRequests((auth) ->
+                        auth
+                                .requestMatchers("/register").permitAll()
+                                .anyRequest().authenticated());
 
         return http.build();
-    }
-
-    @Bean
-    public UserDetailsService userDetailsService() {
-        LOGGER.info("Configuring UserDetailsService");
-        UserDetails userDetails = User.builder()
-                .username("bill")
-                .password("password")
-                .passwordEncoder(passwordEncoder()::encode)
-                .roles("USER")
-                .build();
-
-        return new InMemoryUserDetailsManager(userDetails);
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+//    @Bean
+//    public UserDetailsService userDetailsService(DataSource dataSource) {
+//        LOGGER.info("Configuring UserDetailsService");
+//        return new JdbcUserDetailsManager(dataSource);
+//    }
 
     @Bean
     public JWKSource<SecurityContext> jwkSource() throws NoSuchAlgorithmException {
