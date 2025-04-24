@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class StripeService {
-    @Value("${stripe.secret-key}")
+    @Value("${stripe.key}")
     private String stripeSecretKey;
 
     public StripeResponse checkoutProduct(ProductRequest productRequest) {
