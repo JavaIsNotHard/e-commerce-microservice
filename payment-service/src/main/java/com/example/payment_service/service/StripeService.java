@@ -1,6 +1,6 @@
 package com.example.payment_service.service;
 
-import com.example.payment_service.dto.ProductRequest;
+import com.example.payment_service.dto.OrderRequest;
 import com.example.payment_service.dto.StripeResponse;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
@@ -14,30 +14,30 @@ public class StripeService {
     @Value("${stripe.key}")
     private String stripeSecretKey;
 
-    public StripeResponse checkoutProduct(ProductRequest productRequest) {
+    public StripeResponse checkoutProduct(OrderRequest orderRequest) {
         Stripe.apiKey = stripeSecretKey;
 
         SessionCreateParams.LineItem.PriceData.ProductData productData =
                 SessionCreateParams.LineItem.PriceData.ProductData.builder()
-                    .setName(productRequest.getName())
+                    .setName(orderRequest.getName())
                         .build();
 
         SessionCreateParams.LineItem.PriceData priceData =
                 SessionCreateParams.LineItem.PriceData.builder()
-                        .setCurrency(productRequest.getCurrency() == null ? "USD" : productRequest.getCurrency())
-                        .setUnitAmount(productRequest.getAmount())
+                        .setCurrency(orderRequest.getCurrency() == null ? "USD" : orderRequest.getCurrency())
+                        .setUnitAmount(orderRequest.getAmount())
                         .setProductData(productData)
                         .build();
 
 
         SessionCreateParams.LineItem lineItem = SessionCreateParams.LineItem.builder()
-                .setQuantity(productRequest.getQuantity())
+                .setQuantity(orderRequest.getQuantity())
                 .setPriceData(priceData).build();
 
         SessionCreateParams params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
-                .setSuccessUrl("http://localhost:8085/payment/success")
-                .setCancelUrl("http://localhost:8085/payment/cancel")
+                .setSuccessUrl("http://localhost:8085/payment/v1/success")
+                .setCancelUrl("http://localhost:8085/payment/v1/cancel")
                 .addLineItem(lineItem)
                 .build();
 
